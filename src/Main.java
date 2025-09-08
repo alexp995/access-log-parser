@@ -27,9 +27,9 @@ public class Main {
             System.out.println("Это файл номер " + sumN);
 
 
-            int totalLines = 0;
-            int maxLength = Integer.MIN_VALUE;
-            int minLength = Integer.MAX_VALUE;
+            int totalRequests = 0;
+            int googleBotCount = 0;
+            int yandexBotCount = 0;
 
             try {
 
@@ -44,19 +44,44 @@ public class Main {
                         throw new TooLongException("Строка длиной более 1024 символа");
                     }
 
-                    totalLines++;
-                    if (length > maxLength) {
-                        maxLength = length;
+                    totalRequests++;
+
+
+                    int lastQuote = line.lastIndexOf("\"");
+                    int secondLastQuote = line.lastIndexOf("\"", lastQuote - 1);
+                    if (lastQuote == -1 || secondLastQuote == -1) {
+                        continue;
                     }
-                    if (length < minLength) {
-                        minLength = length;
+                    String userAgent = line.substring(secondLastQuote + 1, lastQuote);
+
+                    int start = userAgent.lastIndexOf('(');
+                    int end = userAgent.lastIndexOf(')');
+                    if (start == -1 || end == -1) {
+                        continue;
+                    }
+                    String brakets = userAgent.substring(start + 1, end);
+
+                    String[] parts = brakets.split(";");
+                    if (parts.length >= 2) {
+                        String fragment = parts[1].trim();
+                        int slashIndex = fragment.indexOf('/');
+                        if (slashIndex != -1) {
+                            fragment = fragment.substring(0, slashIndex);
+                        }
+                        if (fragment.equals("Googlebot")) {
+                            googleBotCount++;
+                        }
+                        if (fragment.equals("YandexBot")) {
+                            yandexBotCount++;
+                        }
                     }
                 }
+                System.out.println("Общее число запросов: " + totalRequests);
+                if (totalRequests > 0) {
+                    System.out.printf("Доля Googlebot: %.2f%%\n", (googleBotCount * 100.0 / totalRequests));
+                    System.out.printf("Доля YandexBot: %.2f%%\n", (yandexBotCount * 100.0 / totalRequests));
+                }
 
-
-                System.out.println("Общее количество строк: " + totalLines);
-                System.out.println("Длина самой длинной строки: " + maxLength);
-                System.out.println("Длина самой короткой строки: " + minLength);
 
                 reader.close();
 
