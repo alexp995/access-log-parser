@@ -32,13 +32,15 @@ public class Main {
             int yandexBotCount = 0;
 
             try {
-
+                Statictics stat = new Statictics();
                 FileReader fileReader = new FileReader(path);
                 BufferedReader reader = new BufferedReader(fileReader);
                 String line;
 
                 while ((line = reader.readLine()) != null) {
                     int length = line.length();
+                    LogEntry entry = new LogEntry(line);
+                    stat.addEntry(entry);
 
                     if (length > 1024) {
                         throw new TooLongException("Строка длиной более 1024 символа");
@@ -80,6 +82,7 @@ public class Main {
                 if (totalRequests > 0) {
                     System.out.printf("Доля Googlebot: %.2f%%\n", (googleBotCount * 100.0 / totalRequests));
                     System.out.printf("Доля YandexBot: %.2f%%\n", (yandexBotCount * 100.0 / totalRequests));
+                    System.out.printf("Средний трафик в час: %.2f байт\n", stat.getTrafficRate());
                 }
 
 
