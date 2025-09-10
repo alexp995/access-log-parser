@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.Scanner;
 
+
 public class Main {
     public static void main(String[] args) {
         int sumN = 0;
@@ -83,9 +84,11 @@ public class Main {
                     System.out.printf("Доля Googlebot: %.2f%%\n", (googleBotCount * 100.0 / totalRequests));
                     System.out.printf("Доля YandexBot: %.2f%%\n", (yandexBotCount * 100.0 / totalRequests));
                     System.out.printf("Средний трафик в час: %.2f байт\n", stat.getTrafficRate());
+                    System.out.printf("Средний трафик в час: %.2f байт\n", stat.getTrafficRate());
+                    System.out.println("Доля инф. системы в общем количестве:");
+                    stat.getProportionOs().forEach((key, value) -> System.out.println(key + ":" + String.format("%.2f", value)));
+                    System.out.println();
                 }
-
-
                 reader.close();
 
             } catch (TooLongException e) {
