@@ -11,6 +11,9 @@ public class Statictics {
 
     private HashSet<String> existPages = new HashSet<>();
     private HashMap<String, Integer> statOs = new HashMap<>();
+    private HashSet<String> notExistPages = new HashSet<>();
+
+    private HashMap<String, Integer> browserCount = new HashMap<>();
 
 
     public void addEntry(LogEntry entry) {
@@ -28,8 +31,16 @@ public class Statictics {
             existPages.add(entry.getPath());
         }
 
+        if (entry.getCodeResponce() == 404) {
+            notExistPages.add(entry.getPath());
+        }
+
         String os = entry.getUserAgent().getOsType();
         statOs.put(os, statOs.getOrDefault(os, 0) + 1);
+
+        String browser = entry.getUserAgent().getBrowserType();
+        browserCount.put(browser, browserCount.getOrDefault(browser, 0) + 1);
+
     }
 
     public double getTrafficRate() {
@@ -45,6 +56,10 @@ public class Statictics {
 
     public HashSet<String> getExistPages() {
         return existPages;
+    }
+
+    public HashSet<String> getNotExistPages() {
+        return notExistPages;
     }
 
     public HashMap<String, Double> getProportionOs() {
@@ -65,4 +80,21 @@ public class Statictics {
         return result;
     }
 
+    public HashMap<String, Double> getProportionBrowser() {
+        HashMap<String, Double> browserResult = new HashMap<>();
+        int totalAllBrowser = 0;
+        for (int countAllBrowserValue : browserCount.values()) {
+            totalAllBrowser += countAllBrowserValue;
+        }
+        if (totalAllBrowser == 0) {
+            return browserResult;
+        }
+
+        for (String browserKey : browserCount.keySet()) {
+            int countBrowserKey = browserCount.get(browserKey);
+            double finalBrowserResult = (double) countBrowserKey / totalAllBrowser;
+            browserResult.put(browserKey, finalBrowserResult);
+        }
+        return browserResult;
+    }
 }
