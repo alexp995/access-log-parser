@@ -15,8 +15,13 @@ public class Statictics {
 
     private HashMap<String, Integer> browserCount = new HashMap<>();
 
+    private int totalRequests = 0;
+    private int googleBotCount = 0;
+    private int yandexBotCount = 0;
+
 
     public void addEntry(LogEntry entry) {
+        totalRequests++;
         totalTraffic += entry.getDataSize();
         LocalDateTime time = entry.getDateTime();
 
@@ -41,6 +46,10 @@ public class Statictics {
         String browser = entry.getUserAgent().getBrowserType();
         browserCount.put(browser, browserCount.getOrDefault(browser, 0) + 1);
 
+        UserAgent ua = entry.getUserAgent();
+
+        if (ua.isGoogleBot()) googleBotCount++;
+        if (ua.isYandexBot()) yandexBotCount++;
     }
 
     public double getTrafficRate() {
@@ -96,5 +105,31 @@ public class Statictics {
             browserResult.put(browserKey, finalBrowserResult);
         }
         return browserResult;
+    }
+
+    public int getGoogleBotCount() {
+        return googleBotCount;
+    }
+
+    public int getYandexBotCount() {
+        return yandexBotCount;
+    }
+
+    public int getTotalRequests() {
+        return totalRequests;
+    }
+
+    public void printStatistics() {
+        System.out.println("Общее число запросов: " + totalRequests);
+        System.out.printf("Доля Googlebot: %.2f%%\n", (googleBotCount * 100.0 / totalRequests));
+        System.out.printf("Доля YandexBot: %.2f%%\n", (yandexBotCount * 100.0 / totalRequests));
+        System.out.printf("Средний трафик в час: %.2f байт\n", getTrafficRate());
+
+        System.out.println("Доля ОС в общем количестве:");
+        getProportionOs().forEach((key, value) -> System.out.println(key + ": " + String.format("%.2f", value)));
+
+        System.out.println("Доля браузеров в общем количестве:");
+        getProportionBrowser().forEach((key, value) -> System.out.println(key + ": " + String.format("%.2f", value)));
+        System.out.println();
     }
 }
