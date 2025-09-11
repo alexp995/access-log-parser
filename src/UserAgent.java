@@ -5,10 +5,13 @@ public class UserAgent {
     private final boolean isGoogleBot;
     private final boolean isYandexBot;
 
+    private final String original;
+
     public UserAgent(String userAgentString) {
         userAgentString = userAgentString.toLowerCase();
         isGoogleBot = userAgentString.contains("googlebot");
         isYandexBot = userAgentString.contains("yandexbot");
+        original = userAgentString;
 
 
         if (userAgentString.contains("windows")) {
@@ -49,5 +52,9 @@ public class UserAgent {
 
     public boolean isYandexBot() {
         return isYandexBot;
+    }
+
+    public String getOriginal() {
+        return original;
     }
 }

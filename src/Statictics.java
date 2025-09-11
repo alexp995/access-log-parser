@@ -4,6 +4,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.HashSet;
 
+
 public class Statictics {
     private int totalTraffic = 0;
     private LocalDateTime minTime = null;
@@ -15,9 +16,13 @@ public class Statictics {
 
     private HashMap<String, Integer> browserCount = new HashMap<>();
 
+    private HashSet<String> uniqueRealUserIPs = new HashSet<>();
+
     private int totalRequests = 0;
     private int googleBotCount = 0;
     private int yandexBotCount = 0;
+    private int isNotBotCount = 0;
+    private int errorRequestCount = 0;
 
 
     public void addEntry(LogEntry entry) {
@@ -48,8 +53,23 @@ public class Statictics {
 
         UserAgent ua = entry.getUserAgent();
 
-        if (ua.isGoogleBot()) googleBotCount++;
-        if (ua.isYandexBot()) yandexBotCount++;
+        if (ua.isGoogleBot()) {
+            googleBotCount++;
+        }
+        if (ua.isYandexBot()) {
+            yandexBotCount++;
+        }
+        if (!ua.getOriginal().toLowerCase().contains("bot")) {
+            isNotBotCount++;
+        }
+
+        int code = entry.getCodeResponce();
+        if (code >= 400 || code < 600) {
+            errorRequestCount++;
+
+            String ip = entry.getIp();
+            uniqueRealUserIPs.add(ip);
+        }
     }
 
     public double getTrafficRate() {
@@ -119,6 +139,37 @@ public class Statictics {
         return totalRequests;
     }
 
+
+    public double getAvgVisitsHour() {
+        if (minTime == null || maxTime == null) {
+            return 0;
+        }
+        long hours = ChronoUnit.HOURS.between(minTime, maxTime);
+        if (hours == 0) {
+            hours = 1;
+        }
+        return isNotBotCount / (double) hours;
+    }
+
+    public double getAvgErrorRequestsPerHour() {
+        if (minTime == null || maxTime == null) {
+            return 0;
+        }
+        long hours = ChronoUnit.HOURS.between(minTime, maxTime);
+        if (hours == 0) {
+            hours = 1;
+        }
+        return errorRequestCount / (double) hours;
+    }
+
+    public double getAvgRequestOneUser() {
+        if (uniqueRealUserIPs.isEmpty()) {
+            return 0;
+        }
+        return (double) isNotBotCount / uniqueRealUserIPs.size();
+    }
+
+
     public void printStatistics() {
         System.out.println("Общее число запросов: " + totalRequests);
         System.out.printf("Доля Googlebot: %.2f%%\n", (googleBotCount * 100.0 / totalRequests));
@@ -130,6 +181,9 @@ public class Statictics {
 
         System.out.println("Доля браузеров в общем количестве:");
         getProportionBrowser().forEach((key, value) -> System.out.println(key + ": " + String.format("%.2f", value)));
-        System.out.println();
+        System.out.println("Среднее количество пользователей в час: " + String.format("%.2f", getAvgVisitsHour()));
+        System.out.println("Среднее количество неуспешных запросов в час: " + String.format("%.2f", getAvgErrorRequestsPerHour()));
+        System.out.println("Средняя посещаемость одним пользователем: " + String.format("%.2f", getAvgRequestOneUser()));
+
     }
 }
