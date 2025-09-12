@@ -3,6 +3,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 
 public class Statictics {
@@ -17,6 +18,12 @@ public class Statictics {
     private HashMap<String, Integer> browserCount = new HashMap<>();
 
     private HashSet<String> uniqueRealUserIPs = new HashSet<>();
+
+    private HashMap<LocalDateTime, Integer> notBotRequestPerSecond = new HashMap<>();
+
+    private HashSet<String> refererPages = new HashSet<>();
+    private HashMap<String, Integer> maxVisitsOneUser = new HashMap();
+
 
     private int totalRequests = 0;
     private int googleBotCount = 0;
@@ -61,7 +68,22 @@ public class Statictics {
         }
         if (!ua.getOriginal().toLowerCase().contains("bot")) {
             isNotBotCount++;
+            LocalDateTime second = entry.getDateTime().withNano(0);
+            notBotRequestPerSecond.put(second, notBotRequestPerSecond.getOrDefault(second, 0) + 1);
+            String ip = entry.getIp();
+            maxVisitsOneUser.put(ip, maxVisitsOneUser.getOrDefault(ip, 0) + 1);
         }
+        String ref = entry.getReferer();
+        if (ref != null) {
+            int start = ref.indexOf('/');
+            int startRef = ref.indexOf('/', start + 1);
+            int endRef = ref.indexOf('/', startRef + 1);
+            if (startRef != -1 && endRef != -1) {
+                String finalRef = ref.substring(startRef + 1, endRef);
+                refererPages.add(finalRef);
+            }
+        }
+
 
         int code = entry.getCodeResponce();
         if (code >= 400 || code < 600) {
@@ -169,6 +191,36 @@ public class Statictics {
         return (double) isNotBotCount / uniqueRealUserIPs.size();
     }
 
+    public double getMaxUserPerSecond() {
+        int max = 0;
+        for (int nbrp : notBotRequestPerSecond.values()) {
+            if (nbrp > max) {
+                max = nbrp;
+            }
+        }
+        return max;
+    }
+
+    public HashSet<String> getRefererPages() {
+        return refererPages;
+    }
+
+    public HashMap<String, Integer> getMaxVisitsOneUser() {
+        HashMap<String, Integer> finalMaxVisitOneUser = new HashMap<>();
+        int max = 0;
+        for (int count : maxVisitsOneUser.values()) {
+            if (count > max) {
+                max = count;
+            }
+        }
+        for (Map.Entry<String, Integer> entry : maxVisitsOneUser.entrySet()) {
+            if (entry.getValue() == max) {
+                finalMaxVisitOneUser.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return finalMaxVisitOneUser;
+    }
+
 
     public void printStatistics() {
         System.out.println("Общее число запросов: " + totalRequests);
@@ -184,6 +236,11 @@ public class Statictics {
         System.out.println("Среднее количество пользователей в час: " + String.format("%.2f", getAvgVisitsHour()));
         System.out.println("Среднее количество неуспешных запросов в час: " + String.format("%.2f", getAvgErrorRequestsPerHour()));
         System.out.println("Средняя посещаемость одним пользователем: " + String.format("%.2f", getAvgRequestOneUser()));
+        System.out.println("Пиковое количество запросов в секунду: " + getMaxUserPerSecond());
+        System.out.println("Список сайтов, со страниц которых есть ссылки на текущий сайт: ");
+        System.out.println(getRefererPages());
+        System.out.println("Максимальное количество посещений пользователем: " + getMaxVisitsOneUser());
+
 
     }
 }
