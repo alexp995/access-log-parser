@@ -4,6 +4,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 public class Statictics {
@@ -192,13 +193,10 @@ public class Statictics {
     }
 
     public double getMaxUserPerSecond() {
-        int max = 0;
-        for (int nbrp : notBotRequestPerSecond.values()) {
-            if (nbrp > max) {
-                max = nbrp;
-            }
-        }
-        return max;
+        return notBotRequestPerSecond.values().stream()
+                .mapToInt(Integer::intValue)
+                .max()
+                .orElse(0);
     }
 
     public HashSet<String> getRefererPages() {
@@ -206,19 +204,26 @@ public class Statictics {
     }
 
     public HashMap<String, Integer> getMaxVisitsOneUser() {
-        HashMap<String, Integer> finalMaxVisitOneUser = new HashMap<>();
-        int max = 0;
-        for (int count : maxVisitsOneUser.values()) {
-            if (count > max) {
-                max = count;
-            }
-        }
-        for (Map.Entry<String, Integer> entry : maxVisitsOneUser.entrySet()) {
-            if (entry.getValue() == max) {
-                finalMaxVisitOneUser.put(entry.getKey(), entry.getValue());
-            }
-        }
-        return finalMaxVisitOneUser;
+        return maxVisitsOneUser.entrySet().stream()
+                .collect(
+                        Collectors.collectingAndThen(
+                                Collectors.toList(),
+                                list -> {
+                                    int max = list.stream()
+                                            .mapToInt(Map.Entry::getValue)
+                                            .max()
+                                            .orElse(0);
+                                    return list.stream()
+                                            .filter(e -> e.getValue() == max)
+                                            .collect(Collectors.toMap(
+                                                    Map.Entry::getKey,
+                                                    Map.Entry::getValue,
+                                                    (e1, e2) -> e1,
+                                                    HashMap::new
+                                            ));
+                                }
+                        )
+                );
     }
 
 
